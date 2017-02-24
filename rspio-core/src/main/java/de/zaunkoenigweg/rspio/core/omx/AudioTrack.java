@@ -2,7 +2,10 @@ package de.zaunkoenigweg.rspio.core.omx;
 
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -19,8 +22,30 @@ public class AudioTrack {
         super();
         this.audioFile = audioFile;
     }
+    
+    private void autoPauseAfter(Duration duration) {
+        new Thread(() -> {
+            Instant start = Instant.now();
+            Instant now = Instant.now();
+            while(Duration.between(start, now).compareTo(duration)<0 && state==State.PLAYING) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    LOG.trace(String.format("audio track '%s': autopause was interrupted.", audioFile));
+                    return;
+                }
+                now = Instant.now();
+            }
+            LOG.trace(String.format("audio track '%s': autopause after %s.", audioFile, duration));
+            pause();
+        }).start();
+    }
 
     public State play() {
+        return play(null);
+    }
+
+    public State play(Duration duration) {
         synchronized (state) {
             switch (state) {
             case NOT_YET_STARTED:
@@ -29,6 +54,9 @@ public class AudioTrack {
                     LOG.trace(String.format("audio track '%s': playback started.", audioFile));
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be started.", audioFile));
+                }
+                if(duration!=null) {
+                    autoPauseAfter(duration);
                 }
                 break;
             case PLAYING:
@@ -40,6 +68,9 @@ public class AudioTrack {
                     LOG.trace(String.format("audio track '%s': playback resumed.", audioFile));
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be resumed.", audioFile));
+                }
+                if(duration!=null) {
+                    autoPauseAfter(duration);
                 }
                 break;
             case TERMINATED:
@@ -127,7 +158,7 @@ public class AudioTrack {
 
     private boolean startOmxPlayer() {
         try {
-            omxProcess = new ProcessBuilder("bash", "-c", "omxplayer " + this.audioFile.toString()).start();
+            omxProcess = new ProcessBuilder("bash", "-c", "omxplayer " + StringUtils.replace(this.audioFile.toString(), " ", "\\ ")).start();
             omxInputWriter = new PrintWriter(omxProcess.getOutputStream());
             new Thread(() -> {
                 try {
@@ -161,6 +192,15 @@ public class AudioTrack {
 
     public static enum State {
         NOT_YET_STARTED, PLAYING, PAUSED, TERMINATED;
+    }
+    
+    @Override
+    public String toString() {
+        return this.audioFile.toString();
+    }
+
+    public State getState() {
+        return state;
     }
 
 }
