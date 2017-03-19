@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class MediaLibrary {
 
@@ -26,6 +27,9 @@ public class MediaLibrary {
     private final static Log LOG = LogFactory.getLog(MediaLibrary.class);
 
     private Path rootFolder;
+    
+    @Autowired
+    private AudioPlayer audioPlayer;
     
     /**
      * After construction the attributes of the MediaLibrary are checked.
@@ -58,7 +62,7 @@ public class MediaLibrary {
                     .map(rootFolder::resolve)
                     .filter(Files::exists)
                     .filter(Files::isRegularFile)
-                    .map(AudioTrack::new)
+                    .map(this::audioTrack)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             LOG.error(String.format("MediaLibrary could not load playlist from '%s' because an I/O error occurred.", playlistPath), e);
@@ -78,6 +82,10 @@ public class MediaLibrary {
             LOG.error(String.format("MediaLibrary could not load duration from '%s' because an I/O or conversion error occurred.", durationFilePath), e);
             return null;
         }
+    }
+    
+    private AudioTrack audioTrack(Path audioFile) {
+        return new AudioTrack(audioFile, audioPlayer);
     }
     
     public Path getRootFolder() {

@@ -14,13 +14,15 @@ public class AudioTrack {
     private final static Log LOG = LogFactory.getLog(AudioTrack.class);
 
     Path audioFile;
+    AudioPlayer audioPlayer;
     Process omxProcess;
     PrintWriter omxInputWriter;
     State state = State.NOT_YET_STARTED;
 
-    public AudioTrack(Path audioFile) {
+    public AudioTrack(Path audioFile, AudioPlayer audioPlayer) {
         super();
         this.audioFile = audioFile;
+        this.audioPlayer = audioPlayer;
     }
     
     private void autoPauseAfter(Duration duration) {
@@ -52,6 +54,7 @@ public class AudioTrack {
                 state = startOmxPlayer() ? State.PLAYING : State.NOT_YET_STARTED;
                 if(state==State.PLAYING) {
                     LOG.trace(String.format("audio track '%s': playback started.", audioFile));
+                    audioPlayer.playing();
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be started.", audioFile));
                 }
@@ -66,6 +69,7 @@ public class AudioTrack {
                 state = send('p') ? State.PLAYING : State.PAUSED;
                 if(state==State.PLAYING) {
                     LOG.trace(String.format("audio track '%s': playback resumed.", audioFile));
+                    audioPlayer.playing();
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be resumed.", audioFile));
                 }
@@ -90,6 +94,7 @@ public class AudioTrack {
             case PLAYING:
                 state = send('p') ? State.PAUSED : State.PLAYING;
                 if(state==State.PAUSED) {
+                    audioPlayer.stopped();
                     LOG.trace(String.format("audio track '%s': paused.", audioFile));
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be paused.", audioFile));
@@ -119,6 +124,7 @@ public class AudioTrack {
                 state = send('p') ? State.PLAYING : State.PAUSED;
                 if(state==State.PLAYING) {
                     LOG.trace(String.format("audio track '%s': resumed.", audioFile));
+                    audioPlayer.playing();
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be resumed.", audioFile));
                 }
@@ -144,6 +150,7 @@ public class AudioTrack {
                 }
                 if(state==State.TERMINATED) {
                     LOG.trace(String.format("audio track '%s': playback stopped.", audioFile));
+                    audioPlayer.stopped();
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be stopped.", audioFile));
                 }
