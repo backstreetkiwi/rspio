@@ -1,6 +1,10 @@
 package de.zaunkoenigweg.rspio.core.omx;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -26,6 +30,8 @@ public class AudioPlayer {
    
     private GpioPinDigitalOutput playbackLed;
     
+    private Set<AudioTrack> playingTracks = new HashSet<>();
+    
     public AudioPlayer() {
     }
 
@@ -46,6 +52,23 @@ public class AudioPlayer {
     
     public void stopped() {
         playbackLed.low();
+    }
+    
+    public void register(AudioTrack track) {
+        synchronized (playingTracks) {
+            this.playingTracks.add(track);
+        }
+    }
+    
+    public void unregister(AudioTrack track) {
+        synchronized (playingTracks) {
+            this.playingTracks.remove(track);
+        }
+    }
+    
+    public void stopAll() {
+        List<AudioTrack> list = this.playingTracks.stream().collect(Collectors.toList());
+        list.stream().forEach(AudioTrack::stop);
     }
     
     public void setPlaybackLedPin(Pin playbackLedPin) {

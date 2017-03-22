@@ -38,8 +38,12 @@ public class AudioTrack {
                 }
                 now = Instant.now();
             }
-            LOG.trace(String.format("audio track '%s': autopause after %s.", audioFile, duration));
-            pause();
+            if(state==State.PLAYING) {
+                LOG.trace(String.format("audio track '%s': autopause after %s.", audioFile, duration));
+                pause();
+            } else {
+                LOG.trace(String.format("audio track '%s': autopause after %s interrupted after %s because track is no longer played back.", audioFile, duration, Duration.between(start, now)));
+            }
         }).start();
     }
 
@@ -151,6 +155,7 @@ public class AudioTrack {
                 if(state==State.TERMINATED) {
                     LOG.trace(String.format("audio track '%s': playback stopped.", audioFile));
                     audioPlayer.stopped();
+                    audioPlayer.unregister(this);
                 } else {
                     LOG.trace(String.format("audio track '%s': playback could not be stopped.", audioFile));
                 }
@@ -169,11 +174,13 @@ public class AudioTrack {
             omxInputWriter = new PrintWriter(omxProcess.getOutputStream());
             new Thread(() -> {
                 try {
+                    audioPlayer.register(this);
                     omxProcess.waitFor();
                     if(state!=State.TERMINATED) {
                         synchronized (state) {
                             state = State.TERMINATED;
                             audioPlayer.stopped();
+                            audioPlayer.unregister(this);
                         }
                     }
                 } catch (InterruptedException e) {
