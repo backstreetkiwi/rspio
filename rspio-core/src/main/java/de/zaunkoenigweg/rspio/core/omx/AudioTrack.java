@@ -173,6 +173,7 @@ public class AudioTrack {
                     if(state!=State.TERMINATED) {
                         synchronized (state) {
                             state = State.TERMINATED;
+                            audioPlayer.stopped();
                         }
                     }
                 } catch (InterruptedException e) {
