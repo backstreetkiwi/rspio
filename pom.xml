@@ -4,7 +4,7 @@
 
     <groupId>de.zaunkoenigweg.rspio</groupId>
     <artifactId>rspio</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <name>RSPIO</name>
     <description>RSPIO - Raspberry Pi I/O</description>
