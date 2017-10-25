@@ -1,7 +1,9 @@
 package de.zaunkoenigweg.rspio.audio;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AudioTrackSet implements AudioTrackRegistry {
 
@@ -22,9 +24,9 @@ public class AudioTrackSet implements AudioTrackRegistry {
     }
 	
     public void stopAll() {
-        synchronized (tracks) {
-        	this.tracks.stream().forEach(AudioTrack::stop);
-        	this.tracks.clear();
+    	synchronized (tracks) {
+    		List<AudioTrack> tracksToStop = this.tracks.stream().collect(Collectors.toList());
+			tracksToStop.stream().forEach(AudioTrack::stop);
         }
     }
 }
