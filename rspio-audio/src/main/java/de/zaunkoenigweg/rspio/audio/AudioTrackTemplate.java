@@ -50,6 +50,11 @@ public abstract class AudioTrackTemplate implements AudioTrack {
             }
         }).start();
     }
+    
+    @Override
+    public String getTitle() {
+    	return audioFile.getFileName().toString();
+    }
 
     @Override
     public PlaybackState play() {

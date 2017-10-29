@@ -3,6 +3,7 @@ package de.zaunkoenigweg.rspio.audio;
 import java.time.Duration;
 
 public interface AudioTrack {
+	public String getTitle();
     public PlaybackState play();
     public PlaybackState play(Duration duration);
     public PlaybackState pause();
