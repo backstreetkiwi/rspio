@@ -12,6 +12,7 @@
 
     <modules>
         <module>rspio-core</module>
+        <module>rspio-audio</module>
         <module>rspio-demo</module>
     </modules>
 
